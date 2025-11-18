@@ -4,13 +4,16 @@ import SongResult from './components/SongResult'
 
 function App() {
   const [loading, setLoading] = useState(false)
+  const [audioLoading, setAudioLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const [lastPayload, setLastPayload] = useState(null)
 
   const backend = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'
 
   const onGenerate = async (payload) => {
     setLoading(true)
     setResult(null)
+    setLastPayload(payload)
     try {
       const res = await fetch(`${backend}/api/songs`, {
         method: 'POST',
@@ -23,6 +26,24 @@ function App() {
       setResult({ title: 'Fehler', lyrics: [e.message] })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const onGenerateAudio = async () => {
+    if (!lastPayload) return
+    setAudioLoading(true)
+    try {
+      const res = await fetch(`${backend}/api/songs/audio`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lastPayload)
+      })
+      const data = await res.json()
+      setResult(prev => ({ ...(prev || {}), ...data }))
+    } catch (e) {
+      setResult(prev => ({ ...(prev || {}), detail: e.message }))
+    } finally {
+      setAudioLoading(false)
     }
   }
 
@@ -39,7 +60,7 @@ function App() {
 
           <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-6 shadow-xl">
             <GeneratorForm onGenerate={onGenerate} loading={loading} />
-            <SongResult result={result} onReset={()=>setResult(null)} />
+            <SongResult result={result} onReset={()=>setResult(null)} onGenerateAudio={onGenerateAudio} audioLoading={audioLoading} />
           </div>
 
           <div className="text-center mt-6 text-blue-300/70 text-sm">

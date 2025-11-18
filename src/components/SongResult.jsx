@@ -1,4 +1,4 @@
-export default function SongResult({ result, onReset }) {
+export default function SongResult({ result, onReset, onGenerateAudio, audioLoading }) {
   if (!result) return null
 
   return (
@@ -9,10 +9,29 @@ export default function SongResult({ result, onReset }) {
       </div>
 
       <div className="prose prose-invert max-w-none">
-        {result.lyrics.map((line, idx) => (
+        {result.lyrics && result.lyrics.map((line, idx) => (
           line === '' ? <hr key={idx} className="my-4 border-blue-500/20" /> :
           <p key={idx} className="text-blue-100 leading-relaxed">{line}</p>
         ))}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3">
+        {result.audio_url ? (
+          <div className="bg-slate-900/40 border border-blue-500/20 rounded-lg p-4">
+            <p className="text-blue-100 mb-2">MP3 Vorschau</p>
+            <audio controls className="w-full" src={result.audio_url} />
+            <div className="mt-2 text-sm">
+              <a className="text-blue-300 hover:text-white" href={result.audio_url} target="_blank" rel="noreferrer">MP3 öffnen/Download</a>
+            </div>
+          </div>
+        ) : (
+          <button disabled={audioLoading} onClick={onGenerateAudio} className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-lg shadow">
+            {audioLoading ? 'Erzeuge MP3…' : 'MP3 generieren'}
+          </button>
+        )}
+        {result.detail && !result.audio_url && (
+          <p className="text-sm text-red-300">{result.detail}</p>
+        )}
       </div>
     </div>
   )
